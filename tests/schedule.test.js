@@ -2,10 +2,10 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { order, preDone, total } = require('../js/data.js');
-const { buildSchedule, streaks, formatRanges, dates } = require('../js/schedule.js');
+const { buildSchedule, streaks, formatRanges, dates, runs } = require('../js/schedule.js');
 
 const SETTINGS = { dailyTarget: 50, startDate: '2026-11-10', targetEnd: '2026-11-29', hardEnd: '2026-12-05' };
-const names = { Deut: 'Deuteronomy', Ps: 'Psalms' };
+const names = { Deut: 'Deuteronomy', Ps: 'Psalms', Josh: 'Joshua', Judg: 'Judges' };
 const nameOf = (k) => names[k] || k;
 
 function startingRead() {
@@ -26,22 +26,27 @@ test('data: 66 books, 1,189 chapters, each chapter once', () => {
   assert.equal(total - preDone.length, 865);
 });
 
-test('reading order follows the requested sequence', () => {
+test('reading order follows the earlier plan, Psalms between the books', () => {
   const unread = order.filter((id) => !startingRead()[id]);
-  assert.equal(unread[0], 'Ps.21');                      // all of Deuteronomy is read
-  const keys = [...new Set(unread.map((id) => id.split('.')[0]))];
-  assert.deepEqual(keys.slice(0, 5), ['Ps', 'Prov', 'Eccl', 'Song', 'Isa']);
-  assert.equal(keys[keys.indexOf('Mal') + 1], 'Josh');
-  assert.equal(keys[keys.indexOf('Esth') + 1], 'Job');
-  assert.equal(keys[keys.indexOf('Job') + 1], 'Rom');       // Matthew–Acts already read
-  assert.ok(!keys.includes('Matt') && !keys.includes('Acts'));
-  assert.equal(keys[keys.length - 1], 'Rev');
+  const segs = runs(unread).map((r) => r.key + ' ' + r.from + '-' + r.to);
+  assert.deepEqual(segs.slice(0, 14), [
+    'Ps 21-34', 'Josh 1-24', 'Judg 1-21', 'Ruth 1-4', 'Ps 35-51', '1Sam 1-31', '2Sam 1-24',
+    'Ps 52-68', '1Kgs 1-22', '2Kgs 1-25', 'Ps 69-85', '1Chr 1-29', '2Chr 1-36', 'Ezra 1-10'
+  ]);
+  assert.deepEqual(segs.slice(14, 24), [
+    'Neh 1-13', 'Esth 1-10', 'Ps 86-102', 'Job 1-42', 'Prov 1-31', 'Eccl 1-12', 'Song 1-8',
+    'Ps 103-119', 'Isa 1-66', 'Jer 1-52'
+  ]);
+  assert.ok(segs.includes('Ps 120-136') && segs.includes('Ps 137-150'));
+  assert.equal(segs[segs.indexOf('Mal 1-4') + 1], 'Ps 137-150');
+  assert.equal(segs[segs.indexOf('Ps 137-150') + 1], 'Rom 1-16');
+  assert.equal(segs.at(-1), 'Rev 1-22');
 });
 
 test('before the plan starts: head start shows day 1, plan starts on the start date', () => {
   const s = plan(startingRead(), '2026-11-09');
   assert.equal(s.beforeStart, true);
-  assert.equal(formatRanges(s.todayEntry.chapters, nameOf), 'Psalms 21–70');
+  assert.equal(formatRanges(s.todayEntry.chapters, nameOf), 'Psalms 21–34 · Joshua 1–24 · Judges 1–12');
   assert.equal(s.upcoming[0].date, '2026-11-10');
   assert.equal(s.upcoming[0].chapters[0], 'Ps.21');
 });
@@ -58,10 +63,10 @@ test('Deut 16–34 finished today: 865 left, finishes on 27 Nov, on track', () =
   assert.equal(s.upcoming.at(-1).chapters.length, 15);
 });
 
-test('day 1 from the starting point: Psalms 21–70, 865 left, finish 27 Nov', () => {
+test('day 1 from the starting point: Psalms 21–34, Joshua, Judges 1–12, 865 left, finish 27 Nov', () => {
   const s = plan(startingRead(), '2026-11-10');
   assert.equal(s.unreadCount, 865);
-  assert.equal(formatRanges(s.todayEntry.chapters, nameOf), 'Psalms 21–70');
+  assert.equal(formatRanges(s.todayEntry.chapters, nameOf), 'Psalms 21–34 · Joshua 1–24 · Judges 1–12');
   assert.equal(s.finishDate, '2026-11-27');
   assert.equal(s.status, 'on-track');
 });
@@ -143,8 +148,9 @@ test('unticking puts a chapter back in its place in the order', () => {
   const read = deutToday(startingRead());
   delete read['Deut.20'];
   const s = plan(read, '2026-11-10');
-  assert.equal(s.todayEntry.chapters[0], 'Deut.20');
-  assert.equal(s.todayEntry.chapters[1], 'Ps.21');
+  assert.equal(s.todayEntry.chapters[0], 'Ps.21');
+  assert.equal(s.todayEntry.chapters[14], 'Deut.20');    // after Psalms 21–34, before Joshua
+  assert.equal(s.todayEntry.chapters[15], 'Josh.1');
 });
 
 test('changing the daily target reshapes the plan', () => {

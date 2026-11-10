@@ -52,21 +52,26 @@
     return books.slice(byKey[a].index, byKey[b].index + 1).map(function (x) { return x.key; });
   }
 
-  // Reading order. Already-read chapters sit in their natural place;
-  // only unread chapters matter to the scheduler.
-  var orderKeys = []
-    .concat(keysBetween('Gen', 'Deut'))      // Genesis–Deuteronomy (Deut 16–34 is "today")
-    .concat(['Ps'])                          // Psalms (21–150 still to read)
-    .concat(keysBetween('Prov', 'Song'))     // Proverbs, Ecclesiastes, Song of Songs
-    .concat(keysBetween('Isa', 'Dan'))       // Major prophets
-    .concat(keysBetween('Hos', 'Mal'))       // Minor prophets
-    .concat(keysBetween('Josh', 'Esth'))     // History books
-    .concat(['Job'])
-    .concat(keysBetween('Matt', 'Rev'));     // New Testament
+  // Reading order, taken from the earlier "What's left" plan: the books run
+  // in Bible order with blocks of Psalms placed between them.
+  // Each entry is [book] for the whole book or [book, from, to].
+  var ORDER = [
+    ['Gen'], ['Ps', 1, 17], ['Exod'], ['Lev'], ['Num'], ['Ps', 18, 34], ['Deut'],
+    ['Josh'], ['Judg'], ['Ruth'], ['Ps', 35, 51],
+    ['1Sam'], ['2Sam'], ['Ps', 52, 68],
+    ['1Kgs'], ['2Kgs'], ['Ps', 69, 85],
+    ['1Chr'], ['2Chr'], ['Ezra'], ['Neh'], ['Esth'], ['Ps', 86, 102],
+    ['Job'], ['Prov'], ['Eccl'], ['Song'], ['Ps', 103, 119],
+    ['Isa'], ['Jer'], ['Lam'], ['Ps', 120, 136],
+    ['Ezek'], ['Dan'], ['Hos'], ['Joel'], ['Amos'], ['Obad'], ['Jonah'], ['Mic'],
+    ['Nah'], ['Hab'], ['Zeph'], ['Hag'], ['Zech'], ['Mal'], ['Ps', 137, 150]
+  ]
+    .concat(keysBetween('Matt', 'Rev').map(function (k) { return [k]; }));  // Matthew–Acts already read
 
   var order = [];
-  orderKeys.forEach(function (key) {
-    range(1, byKey[key].chapters).forEach(function (ch) { order.push(chapterId(key, ch)); });
+  ORDER.forEach(function (seg) {
+    var key = seg[0], from = seg[1] || 1, to = seg[2] || byKey[key].chapters;
+    range(from, to).forEach(function (ch) { order.push(chapterId(key, ch)); });
   });
 
   // Chapters treated as already read when the tracker is first opened.

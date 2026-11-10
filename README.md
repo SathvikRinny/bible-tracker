@@ -12,9 +12,13 @@ Plain HTML, CSS and JavaScript. There is no backend and no build step.
 
 - **Already read:** Genesis to Deuteronomy, Psalms 1–20, and Matthew to Acts
   (finished in an earlier plan). That is 324 of 1,189 chapters, leaving 865.
-- **Order:** Psalms 21–150, Proverbs, Ecclesiastes,
-  Song of Songs, Isaiah, Jeremiah, Lamentations, Ezekiel, Daniel, Hosea to
-  Malachi, Joshua to Esther, Job, then Romans to Revelation.
+- **Order:** the same as the earlier "What's left" plan: the books in Bible
+  order, with blocks of Psalms between them. Psalms 21–34, Joshua, Judges,
+  Ruth, Psalms 35–51, 1–2 Samuel, Psalms 52–68, 1–2 Kings, Psalms 69–85,
+  1 Chronicles to Esther, Psalms 86–102, Job, Proverbs, Ecclesiastes, Song of
+  Songs, Psalms 103–119, Isaiah, Jeremiah, Lamentations, Psalms 120–136,
+  Ezekiel, Daniel, Hosea to Malachi, Psalms 137–150, then Romans to Revelation.
+  The order is defined in `js/data.js`.
 - **Starts** Tue 10 Nov 2026. Each day has a morning session (6–8 AM) and an
   evening session (8:30–10:30 PM).
 - **Pace:** 50 chapters a day, aiming to finish on 29 Nov. If that doesn't fit,
