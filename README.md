@@ -88,7 +88,7 @@ git push origin main:gh-pages
 ```
 
 GitHub Pages rebuilds in a minute or two. Whenever you change a file, also
-change `VERSION` in `sw.js`. Otherwise installed copies keep showing the
+change `VERSION` in `sw.js`, `APP_VERSION` in `js/app.js` and the `?v=` numbers in `index.html`. Otherwise installed copies keep showing the
 old version.
 
 On your phone, open the live link and choose **Add to Home Screen** to install

@@ -7,6 +7,7 @@
   var S = window.Schedule;
   var D = S.dates;
 
+  var APP_VERSION = '6';
   var STORE_KEY = 'lamp.bible-tracker.v1';
   var DEFAULTS = { dailyTarget: 50, startDate: '2026-11-10', targetEnd: '2026-11-29', hardEnd: '2026-12-05' };
   var SESSIONS = {
@@ -407,7 +408,7 @@
           '<div class="btn-row"><button type="button" class="btn danger solid" data-action="reset-confirm" data-focus="reset-confirm">Erase and reset</button><button type="button" class="btn" data-action="reset-cancel">Cancel</button></div></div>'
         : '<p class="muted small">Start over from the original starting point.</p><div><button type="button" class="btn danger" data-action="reset" data-focus="reset">Reset progress</button></div>') +
       '</section>';
-    html += '<p class="foot-note">Works offline once loaded. Tip: add it to your home screen.</p>';
+    html += '<p class="foot-note">Version ' + APP_VERSION + ' \u00b7 reading order from the earlier plan. Works offline once loaded.</p>';
     return html;
   }
 
@@ -653,7 +654,13 @@
 
   if ('serviceWorker' in navigator && location.protocol !== 'file:') {
     window.addEventListener('load', function () {
-      try { navigator.serviceWorker.register('sw.js').catch(function () {}); } catch (e) { /* not available here */ }
+      try { navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).catch(function () {}); } catch (e) { /* not available here */ }
+    });
+    // When a new version takes over, reload once so it shows straight away.
+    var hadController = !!navigator.serviceWorker.controller;
+    var reloaded = false;
+    navigator.serviceWorker.addEventListener('controllerchange', function () {
+      if (hadController && !reloaded) { reloaded = true; location.reload(); }
     });
   }
 })();
