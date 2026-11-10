@@ -6,6 +6,8 @@ and new day rebuilds the plan from the chapters still unread.
 
 Plain HTML, CSS and JavaScript. There is no backend and no build step.
 
+**Live app:** https://sathvikrinny.github.io/bible-tracker/
+
 ## The plan
 
 - **Already read:** Genesis to Deuteronomy 15, Psalms 1–20, and Matthew to
@@ -52,7 +54,6 @@ tests/                scheduling tests (Node's built-in test runner)
 ## Run locally
 
 ```bash
-cd bible-tracker
 python3 -m http.server 8000
 # open http://localhost:8000
 ```
@@ -73,30 +74,21 @@ skipping a day, reading 40 of 50, reading 60, falling behind past 5 Dec, being
 exactly at the limit, the date passing the hard limit, unticking, changing the
 daily target, finishing the plan, and streaks.
 
-## Deploy to GitHub Pages
+## Deploy (GitHub Pages)
 
-1. Create a new repository, for example `bible-tracker`.
-2. Copy the **contents** of this folder to the root of that repository, then
-   commit and push to `main`:
-   ```bash
-   cp -r bible-tracker/. ../bible-tracker-repo/
-   cd ../bible-tracker-repo
-   git init && git add . && git commit -m "Lamp Bible reading tracker"
-   git branch -M main
-   git remote add origin https://github.com/<you>/bible-tracker.git
-   git push -u origin main
-   ```
-3. On GitHub, open **Settings → Pages**. Under **Build and deployment**, choose
-   **Deploy from a branch**, then select `main` and the `/ (root)` folder, and save.
-4. After about a minute the site is live at
-   `https://<you>.github.io/bible-tracker/`.
-5. On your phone, open the link and choose **Add to Home Screen** to install
-   the app. After the first load it works offline.
+The site is published from the `gh-pages` branch. To publish changes:
 
-All paths are relative, so the app works from any sub-path.
+```bash
+git push origin main
+git push origin main:gh-pages
+```
 
-When you change a file later, update `VERSION` in `sw.js` so that installed
-copies download the new version.
+GitHub Pages rebuilds in a minute or two. Whenever you change a file, also
+change `VERSION` in `sw.js`. Otherwise installed copies keep showing the
+old version.
+
+On your phone, open the live link and choose **Add to Home Screen** to install
+the app. It works offline after the first visit.
 
 ## Data and backup
 
