@@ -22,15 +22,15 @@ const plan = (read, today, settings = SETTINGS) => buildSchedule({ order, read, 
 test('data: 66 books, 1,189 chapters, each chapter once', () => {
   assert.equal(total, 1189);
   assert.equal(new Set(order).size, 1189);
-  assert.equal(preDone.length, 50 + 40 + 27 + 36 + 15 + 20 + 28 + 16 + 24 + 21 + 28);
+  assert.equal(preDone.length, 50 + 40 + 27 + 36 + 34 + 20 + 28 + 16 + 24 + 21 + 28);
+  assert.equal(total - preDone.length, 865);
 });
 
 test('reading order follows the requested sequence', () => {
   const unread = order.filter((id) => !startingRead()[id]);
-  assert.equal(unread[0], 'Deut.16');
-  assert.equal(unread[19], 'Ps.21');
+  assert.equal(unread[0], 'Ps.21');                      // all of Deuteronomy is read
   const keys = [...new Set(unread.map((id) => id.split('.')[0]))];
-  assert.deepEqual(keys.slice(0, 6), ['Deut', 'Ps', 'Prov', 'Eccl', 'Song', 'Isa']);
+  assert.deepEqual(keys.slice(0, 5), ['Ps', 'Prov', 'Eccl', 'Song', 'Isa']);
   assert.equal(keys[keys.indexOf('Mal') + 1], 'Josh');
   assert.equal(keys[keys.indexOf('Esth') + 1], 'Job');
   assert.equal(keys[keys.indexOf('Job') + 1], 'Rom');       // Matthew–Acts already read
@@ -38,12 +38,12 @@ test('reading order follows the requested sequence', () => {
   assert.equal(keys[keys.length - 1], 'Rev');
 });
 
-test('eve of the plan: today shows Deuteronomy 16–34, plan starts tomorrow', () => {
+test('before the plan starts: head start shows day 1, plan starts on the start date', () => {
   const s = plan(startingRead(), '2026-11-09');
   assert.equal(s.beforeStart, true);
-  assert.equal(formatRanges(s.todayEntry.chapters, nameOf), 'Deuteronomy 16–34');
+  assert.equal(formatRanges(s.todayEntry.chapters, nameOf), 'Psalms 21–70');
   assert.equal(s.upcoming[0].date, '2026-11-10');
-  assert.equal(s.upcoming[0].chapters[0], 'Deut.16');
+  assert.equal(s.upcoming[0].chapters[0], 'Ps.21');
 });
 
 test('Deut 16–34 finished today: 865 left, finishes on 27 Nov, on track', () => {
@@ -58,13 +58,12 @@ test('Deut 16–34 finished today: 865 left, finishes on 27 Nov, on track', () =
   assert.equal(s.upcoming.at(-1).chapters.length, 15);
 });
 
-test('Deut 16–34 not finished: rolls into day 1, still finishes 27 Nov', () => {
+test('day 1 from the starting point: Psalms 21–70, 865 left, finish 27 Nov', () => {
   const s = plan(startingRead(), '2026-11-10');
-  assert.equal(s.unreadCount, 884);
-  assert.equal(s.todayEntry.chapters[0], 'Deut.16');
+  assert.equal(s.unreadCount, 865);
+  assert.equal(formatRanges(s.todayEntry.chapters, nameOf), 'Psalms 21–70');
   assert.equal(s.finishDate, '2026-11-27');
   assert.equal(s.status, 'on-track');
-  assert.equal(s.upcoming.at(-1).chapters.length, 34);
 });
 
 test('skipping a day: missed chapters roll forward with no input', () => {

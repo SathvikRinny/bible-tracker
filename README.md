@@ -10,9 +10,9 @@ Plain HTML, CSS and JavaScript. There is no backend and no build step.
 
 ## The plan
 
-- **Already read:** Genesis to Deuteronomy 15, Psalms 1–20, and Matthew to
-  Acts (finished in an earlier plan). That is 305 of 1,189 chapters.
-- **Order:** Deuteronomy 16–34, then Psalms 21–150, Proverbs, Ecclesiastes,
+- **Already read:** Genesis to Deuteronomy, Psalms 1–20, and Matthew to Acts
+  (finished in an earlier plan). That is 324 of 1,189 chapters, leaving 865.
+- **Order:** Psalms 21–150, Proverbs, Ecclesiastes,
   Song of Songs, Isaiah, Jeremiah, Lamentations, Ezekiel, Daniel, Hosea to
   Malachi, Joshua to Esther, Job, then Romans to Revelation.
 - **Starts** Tue 10 Nov 2026. Each day has a morning session (6–8 AM) and an
@@ -69,7 +69,7 @@ Requires Node 18 or later:
 node --test tests/schedule.test.js
 ```
 
-The tests cover: the starting state, finishing Deuteronomy the evening before,
+The tests cover: the starting state, the day before the plan starts,
 skipping a day, reading 40 of 50, reading 60, falling behind past 5 Dec, being
 exactly at the limit, the date passing the hard limit, unticking, changing the
 daily target, finishing the plan, and streaks.

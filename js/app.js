@@ -33,7 +33,7 @@
   function seed() {
     var read = {};
     BD.preDone.forEach(function (id) { read[id] = 'pre'; });
-    return { version: 1, seed: 2, read: read, settings: Object.assign({}, DEFAULTS) };
+    return { version: 1, seed: 3, read: read, settings: Object.assign({}, DEFAULTS) };
   }
 
   function sanitize(obj) {
@@ -53,9 +53,9 @@
     if (!(s.startDate <= s.targetEnd && s.targetEnd <= s.hardEnd)) {
       s.startDate = DEFAULTS.startDate; s.targetEnd = DEFAULTS.targetEnd; s.hardEnd = DEFAULTS.hardEnd;
     }
-    // Saves made before seed 2 did not know Matthew–Acts were already read.
-    if (obj.seed !== 2) BD.gospelsActs.forEach(function (id) { if (!read[id]) read[id] = 'pre'; });
-    return { version: 1, seed: 2, read: read, settings: s };
+    // Older saves did not know that Deuteronomy 16–34 and Matthew–Acts were already read.
+    if (obj.seed !== 3) BD.addedLater.forEach(function (id) { if (!read[id]) read[id] = 'pre'; });
+    return { version: 1, seed: 3, read: read, settings: s };
   }
 
   function load() {
@@ -198,7 +198,7 @@
 
     html += '<section class="card today-card" aria-labelledby="todayTitle">';
     html += '<div class="card-head"><div class="today-meta">' +
-      '<h2 class="card-title" id="todayTitle">' + (t.kind === 'prestart' ? 'Finish ' + esc(nameOf(BD.parseId(t.chapters[0]).key)) : 'Today’s reading') + '</h2>' +
+      '<h2 class="card-title" id="todayTitle">' + (t.kind === 'prestart' ? 'Head start' : 'Today’s reading') + '</h2>' +
       '<p class="muted small">' + esc(ranges(t.chapters)) + '</p></div>' +
       badge(allDone ? 'done' : (t.kind === 'prestart' ? 'prestart' : 'today'), allDone ? 'Done' : (t.kind === 'prestart' ? 'Before the plan' : 'Today')) + '</div>';
 
@@ -401,7 +401,7 @@
 
     html += '<section class="card settings-stack" aria-labelledby="resetTitle"><h2 class="section-title" id="resetTitle">Reset</h2>' +
       (confirmingReset
-        ? '<div class="confirm-box" role="alertdialog" aria-labelledby="resetQ"><p id="resetQ"><strong>Erase all ticks and settings?</strong> The tracker goes back to its starting point: Genesis to Deuteronomy 15, Psalms 1–20 and Matthew to Acts marked as read. Export first if you want a copy.</p>' +
+        ? '<div class="confirm-box" role="alertdialog" aria-labelledby="resetQ"><p id="resetQ"><strong>Erase all ticks and settings?</strong> The tracker goes back to its starting point: Genesis to Deuteronomy, Psalms 1–20 and Matthew to Acts marked as read. Export first if you want a copy.</p>' +
           '<div class="btn-row"><button type="button" class="btn danger solid" data-action="reset-confirm" data-focus="reset-confirm">Erase and reset</button><button type="button" class="btn" data-action="reset-cancel">Cancel</button></div></div>'
         : '<p class="muted small">Start over from the original starting point.</p><div><button type="button" class="btn danger" data-action="reset" data-focus="reset">Reset progress</button></div>') +
       '</section>';
@@ -489,7 +489,7 @@
 
   /* ---------------- Backup ---------------- */
   function backupJSON() {
-    return JSON.stringify({ app: 'lamp-bible-tracker', exportedAt: new Date().toISOString(), version: 1, seed: 2, settings: state.settings, read: state.read }, null, 2);
+    return JSON.stringify({ app: 'lamp-bible-tracker', exportedAt: new Date().toISOString(), version: 1, seed: 3, settings: state.settings, read: state.read }, null, 2);
   }
 
   function doExport() {

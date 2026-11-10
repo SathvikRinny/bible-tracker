@@ -80,12 +80,11 @@
     if (unread.length === 0 && !readToday.length) {
       todayEntry = null;
     } else if (beforeStart) {
-      // Before the plan: show what is left of the book in progress
-      // (Deuteronomy on the eve of the plan), plus anything ticked today.
-      var currentKey = unread.length ? keyOf(unread[0]) : null;
-      var pre = order.filter(function (id) {
-        return read[id] === today || (!read[id] && keyOf(id) === currentKey);
-      });
+      // Before the plan: offer the first day's chapters as a head start,
+      // plus anything already ticked today.
+      var first = {};
+      unread.slice(0, base).forEach(function (id) { first[id] = true; });
+      var pre = order.filter(function (id) { return read[id] === today || first[id]; });
       todayEntry = { date: today, chapters: pre, kind: 'prestart', target: pre.length };
     } else {
       var fill = Math.max(0, rate - readToday.length);

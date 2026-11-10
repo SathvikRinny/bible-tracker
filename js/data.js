@@ -75,20 +75,24 @@
     range(1, byKey[key].chapters).forEach(function (ch) { preDone.push(chapterId(key, ch)); });
   });
   range(1, 15).forEach(function (ch) { preDone.push(chapterId('Deut', ch)); });
+  // Deuteronomy 16–34 was finished on 9 Nov, the evening before the plan.
+  var deutRest = range(16, 34).map(function (ch) { return chapterId('Deut', ch); });
   range(1, 20).forEach(function (ch) { preDone.push(chapterId('Ps', ch)); });
   // Gospels and Acts were finished in the earlier plan.
   var gospelsActs = [];
   keysBetween('Matt', 'Acts').forEach(function (key) {
     range(1, byKey[key].chapters).forEach(function (ch) { gospelsActs.push(chapterId(key, ch)); });
   });
-  preDone = preDone.concat(gospelsActs);
+  preDone = preDone.concat(deutRest, gospelsActs);
+  // Chapters added to the starting point after the first release.
+  var addedLater = deutRest.concat(gospelsActs);
 
   return {
     books: books,
     byKey: byKey,
     order: order,
     preDone: preDone,
-    gospelsActs: gospelsActs,
+    addedLater: addedLater,
     total: order.length,
     chapterId: chapterId,
     parseId: parseId
