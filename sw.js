@@ -1,6 +1,6 @@
 /* Offline support: the app shell is cached on install; Google Fonts are
  * cached the first time they load. Bump VERSION when you change any file. */
-const VERSION = 'lamp-v3';
+const VERSION = 'lamp-v4';
 const SHELL = [
   './', 'index.html', 'css/styles.css', 'js/data.js', 'js/schedule.js', 'js/app.js',
   'manifest.webmanifest', 'icons/icon.svg', 'icons/icon-192.png', 'icons/icon-512.png',
@@ -33,11 +33,12 @@ self.addEventListener('fetch', (e) => {
   }
   if (url.origin !== location.origin) return;
 
-  // App files: serve from cache straight away, refresh the cache in the background.
+  // App files: network first so updates show up at once; the cache is the
+  // offline fallback.
   e.respondWith(caches.open(VERSION).then((c) =>
-    c.match(req, { ignoreSearch: true }).then((hit) => {
-      const net = fetch(req).then((res) => { if (res.ok) c.put(req, res.clone()); return res; }).catch(() => hit);
-      return hit || net;
-    })
+    fetch(req).then((res) => {
+      if (res.ok) c.put(req, res.clone());
+      return res;
+    }).catch(() => c.match(req, { ignoreSearch: true }))
   ));
 });

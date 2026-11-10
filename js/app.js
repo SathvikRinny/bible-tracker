@@ -33,7 +33,7 @@
   function seed() {
     var read = {};
     BD.preDone.forEach(function (id) { read[id] = 'pre'; });
-    return { version: 1, seed: 3, read: read, settings: Object.assign({}, DEFAULTS) };
+    return { version: 1, seed: 4, read: read, settings: Object.assign({}, DEFAULTS) };
   }
 
   function sanitize(obj) {
@@ -54,8 +54,10 @@
       s.startDate = DEFAULTS.startDate; s.targetEnd = DEFAULTS.targetEnd; s.hardEnd = DEFAULTS.hardEnd;
     }
     // Older saves did not know that Deuteronomy 16–34 and Matthew–Acts were already read.
-    if (obj.seed !== 3) BD.addedLater.forEach(function (id) { if (!read[id]) read[id] = 'pre'; });
-    return { version: 1, seed: 3, read: read, settings: s };
+    // These were read before the plan, even if they were ticked on a plan day,
+    // so they must not count toward any day's reading.
+    if (!(obj.seed >= 4)) BD.addedLater.forEach(function (id) { read[id] = 'pre'; });
+    return { version: 1, seed: 4, read: read, settings: s };
   }
 
   function load() {
@@ -489,7 +491,7 @@
 
   /* ---------------- Backup ---------------- */
   function backupJSON() {
-    return JSON.stringify({ app: 'lamp-bible-tracker', exportedAt: new Date().toISOString(), version: 1, seed: 3, settings: state.settings, read: state.read }, null, 2);
+    return JSON.stringify({ app: 'lamp-bible-tracker', exportedAt: new Date().toISOString(), version: 1, seed: 4, settings: state.settings, read: state.read }, null, 2);
   }
 
   function doExport() {
