@@ -173,3 +173,28 @@ test('streaks count consecutive reading days', () => {
   assert.deepEqual(streaks(read, '2026-11-13'), { current: 3, best: 3 });
   assert.deepEqual(streaks(read, '2026-11-16'), { current: 0, best: 3 });
 });
+
+test('a partly read day: leftovers come first the next day and are labelled', () => {
+  const read = startingRead();
+  const day = (d) => plan(read, d).todayEntry.chapters;
+  markRead(read, day('2026-11-10'), '2026-11-10');
+  markRead(read, day('2026-11-11'), '2026-11-11');
+  const d3 = day('2026-11-12');
+  markRead(read, d3.slice(0, 24), '2026-11-12');          // 26 left unread on 12 Nov
+  const s = plan(read, '2026-11-13');
+  const left = d3.slice(24);
+  assert.equal(left.length, 26);
+  assert.deepEqual(s.todayEntry.chapters.slice(0, 26), left);
+  assert.equal(Object.keys(s.todayEntry.carried).length, 26);
+  assert.ok(left.every((id) => s.todayEntry.carried[id] === '2026-11-12'));
+  const h = s.history.find((x) => x.date === '2026-11-12');
+  assert.equal(h.kind, 'partial');
+  assert.deepEqual(h.planned, d3);
+  assert.deepEqual(h.left, left);
+  assert.equal(s.history[0].kind, 'done');
+  assert.equal(formatRanges(left, (k) => ({ '2Sam': '2 Samuel', Ps: 'Psalms' })[k]), '2 Samuel 14–24 · Psalms 52–66');
+  // Reading a leftover later does not change what that day had planned.
+  markRead(read, left.slice(0, 5), '2026-11-13');
+  const later = plan(read, '2026-11-13').history.find((x) => x.date === '2026-11-12');
+  assert.equal(later.left.length, 26);
+});

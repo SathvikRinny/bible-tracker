@@ -185,7 +185,8 @@ body::before {
 }
 .badge::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
 .badge.on-track, .badge.complete, .badge.done { background: var(--good-soft); color: var(--good); }
-.badge.behind, .badge.spillover { background: var(--warn-soft); color: var(--warn); }
+.badge.behind, .badge.spillover, .badge.partial { background: var(--warn-soft); color: var(--warn); }
+.carried { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 999px; background: var(--warn-soft); color: var(--warn); font-weight: 700; font-size: .75rem; letter-spacing: 0; }
 .badge.over-limit, .badge.missed { background: var(--bad-soft); color: var(--bad); }
 .badge.today { background: var(--accent); color: var(--on-accent); }
 .badge.upcoming, .badge.prestart { background: var(--surface-2); color: var(--muted); }

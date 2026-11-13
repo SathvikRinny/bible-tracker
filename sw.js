@@ -1,6 +1,6 @@
 /* Offline support: the app shell is cached on install; Google Fonts are
  * cached the first time they load. Bump VERSION when you change any file. */
-const VERSION = 'lamp-v6';
+const VERSION = 'lamp-v7';
 const SHELL = [
   './', 'index.html', 'css/styles.css', 'js/data.js', 'js/schedule.js', 'js/app.js',
   'manifest.webmanifest', 'icons/icon.svg', 'icons/icon-192.png', 'icons/icon-512.png',

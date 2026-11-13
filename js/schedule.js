@@ -54,10 +54,19 @@
       var v = read[id];
       if (v && v !== 'pre') (byDate[v] = byDate[v] || []).push(id);
     });
+    // Past days. Each day's planned list is rebuilt exactly as it looked when
+    // that day began (only reading done before it counts), so we can show
+    // what was left over and where it went.
     var history = [];
-    for (var d = s.startDate; d < today; d = dates.add(d, 1)) {
-      var got = byDate[d] || [];
-      history.push({ date: d, chapters: got, kind: got.length ? 'done' : 'missed' });
+    if (!o.light) {
+      for (var d = s.startDate; d < today; d = dates.add(d, 1)) {
+        var got = byDate[d] || [];
+        var planned = plannedFor(o, d);
+        var left = planned.filter(function (id) { return !read[id] || (read[id] !== 'pre' && read[id] > d); });
+        var kind = !planned.length ? (got.length ? 'done' : 'missed')
+          : !left.length ? 'done' : left.length === planned.length && !got.length ? 'missed' : 'partial';
+        history.push({ date: d, chapters: got, planned: planned, left: left, kind: kind });
+      }
     }
 
     var beforeStart = today < s.startDate;
@@ -100,6 +109,17 @@
     }
 
     // Future days, filled to the rate in reading order.
+    // Where each chapter on today's list was first planned, if earlier than today.
+    var carried = {};
+    if (todayEntry && todayEntry.kind === 'today') {
+      var onToday = {};
+      todayEntry.chapters.forEach(function (id) { onToday[id] = true; });
+      history.forEach(function (h) {
+        h.left.forEach(function (id) { if (onToday[id] && !carried[id]) carried[id] = h.date; });
+      });
+      todayEntry.carried = carried;
+    }
+
     var upcoming = [];
     var day = beforeStart ? s.startDate : dates.add(today, 1);
     while (queue.length) {
@@ -148,6 +168,18 @@
       spilloverDays: spilloverDays,
       readingDaysLeft: Math.max(0, dates.diff(s.hardEnd, today) + 1)
     };
+  }
+
+  /* The list a day started with: what the plan showed on the morning of
+   * `date`, using only reading done before that day. */
+  function plannedFor(o, date) {
+    var before = {};
+    Object.keys(o.read || {}).forEach(function (id) {
+      var v = o.read[id];
+      if (v === 'pre' || v < date) before[id] = v;
+    });
+    var sub = buildSchedule({ order: o.order, read: before, today: date, settings: o.settings, light: true });
+    return sub.todayEntry ? sub.todayEntry.chapters : [];
   }
 
   /* Streaks: a day counts when at least one chapter was ticked on it. */
@@ -210,6 +242,7 @@
   return {
     dates: dates,
     buildSchedule: buildSchedule,
+    plannedFor: plannedFor,
     streaks: streaks,
     countsByDate: countsByDate,
     formatRanges: formatRanges,

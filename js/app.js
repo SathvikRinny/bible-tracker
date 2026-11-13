@@ -7,7 +7,7 @@
   var S = window.Schedule;
   var D = S.dates;
 
-  var APP_VERSION = '6';
+  var APP_VERSION = '7';
   var STORE_KEY = 'lamp.bible-tracker.v1';
   var DEFAULTS = { dailyTarget: 50, startDate: '2026-11-10', targetEnd: '2026-11-29', hardEnd: '2026-12-05' };
   var SESSIONS = {
@@ -131,11 +131,21 @@
       '" data-focus="' + ctx + ':' + id + '" aria-label="' + esc(nameOf(p.key) + ' ' + p.ch) + '">' + p.ch + '</button>';
   }
 
-  function chapterGroups(ids, ctx) {
-    return S.groupByBook(ids).map(function (g) {
+  // Groups of consecutive chapters from the same book. `origin` (optional)
+  // maps a chapter to the earlier day it was carried over from.
+  function chapterGroups(ids, ctx, origin) {
+    origin = origin || {};
+    var groups = [];
+    ids.forEach(function (id) {
+      var key = BD.parseId(id).key, from = origin[id] || '', last = groups[groups.length - 1];
+      if (last && last.key === key && last.from === from) last.ids.push(id);
+      else groups.push({ key: key, from: from, ids: [id] });
+    });
+    return groups.map(function (g) {
       var first = BD.parseId(g.ids[0]).ch, last = BD.parseId(g.ids[g.ids.length - 1]).ch;
       var label = g.ids.length === 1 ? first : first + '–' + last;
-      return '<div class="group"><p class="group-name"><b>' + esc(nameOf(g.key)) + '</b> ' + label + '</p>' +
+      var tag = g.from ? ' <span class="carried">Left from ' + esc(short(g.from)) + '</span>' : '';
+      return '<div class="group"><p class="group-name"><b>' + esc(nameOf(g.key)) + '</b> ' + label + tag + '</p>' +
         '<div class="chips">' + g.ids.map(function (id) { return chip(id, ctx); }).join('') + '</div></div>';
     }).join('');
   }
@@ -208,6 +218,18 @@
     html += '<div><div class="today-count"><b class="num">' + done + '</b><span class="muted">of ' + total + ' chapters read</span></div>' +
       '<div class="bar' + (allDone ? ' good' : '') + '" style="--w:' + pct + '%" role="progressbar" aria-label="Today’s progress" aria-valuemin="0" aria-valuemax="' + total + '" aria-valuenow="' + done + '"><span></span></div></div>';
 
+    var carried = t.carried || {};
+    var carriedIds = t.chapters.filter(function (id) { return carried[id]; });
+    if (carriedIds.length) {
+      var byDay = {};
+      carriedIds.forEach(function (id) { (byDay[carried[id]] = byDay[carried[id]] || []).push(id); });
+      html += '<div class="notice info" role="note">' + ICON.info + '<div><strong>' +
+        plural(carriedIds.length, 'chapter') + ' carried over</strong><span>' +
+        Object.keys(byDay).sort().map(function (d) {
+          return esc(ranges(byDay[d])) + ' (left from ' + esc(short(d)) + ')';
+        }).join('; ') + '. They come first today, in reading order.</span></div></div>';
+    }
+
     if (t.kind === 'prestart') {
       html += '<div class="session"><p class="muted small">The plan starts ' + esc(long(state.settings.startDate)) +
         '. Anything you don’t finish today moves to the first day automatically.</p>' + chapterGroups(t.chapters, 'today') + '</div>';
@@ -219,7 +241,7 @@
         html += '<div class="session" aria-label="' + info.label + ' session">' +
           '<div class="session-head"><p class="session-name">' + x[2] + info.label + ' <span class="session-time">' + info.time + '</span></p>' +
           '<span class="session-progress">' + readCount(ids) + ' / ' + ids.length + '</span></div>' +
-          chapterGroups(ids, 'today') + '</div>';
+          chapterGroups(ids, 'today', carried) + '</div>';
       });
     }
 
@@ -311,6 +333,7 @@
     var lastSection = '';
     rows.forEach(function (r) {
       var d = r.d;
+      if (d.planned) { pastRow(d); return; }
       var section = r.kind === 'done' || r.kind === 'missed' ? 'Past days' : r.kind === 'spillover' ? 'Spillover · by ' + dayMonth(s.hardEnd) : 'Ahead';
       if (r.kind === 'today' || r.kind === 'prestart') section = 'Ahead';
       if (section !== lastSection) { html += '<p class="plan-section-label">' + esc(section) + '</p>'; lastSection = section; }
@@ -337,6 +360,34 @@
     });
     html += '</section>';
     return html;
+
+    function pastRow(d) {
+      if (lastSection !== 'Past days') { html += '<p class="plan-section-label">Past days</p>'; lastSection = 'Past days'; }
+      var isOpen = !!expanded[d.date];
+      var bodyId = 'day-' + d.date;
+      var inPlan = {};
+      d.planned.forEach(function (id) { inPlan[id] = true; });
+      var extra = d.chapters.filter(function (id) { return !inPlan[id]; });
+      var readOfPlan = d.planned.length - d.left.length;
+      var countTxt = d.kind === 'done' ? 'All ' + d.planned.length + ' read'
+        : d.kind === 'missed' ? plural(d.left.length, 'chapter') + ' moved forward'
+        : readOfPlan + ' of ' + d.planned.length + ' read \u00b7 ' + d.left.length + ' moved forward';
+      if (extra.length) countTxt += ' \u00b7 ' + extra.length + ' extra';
+      var label = d.kind === 'partial' ? 'Partly read' : KIND_LABEL[d.kind];
+      html += '<div class="day">' +
+        '<button type="button" class="day-btn" data-action="toggle-day" data-date="' + d.date + '" aria-expanded="' + isOpen + '" aria-controls="' + bodyId + '" data-focus="day:' + d.date + '">' +
+        '<span class="day-date"><b>' + esc(dayMonth(d.date)) + '</b><span>' + esc(weekday(d.date)) + '</span></span>' +
+        '<span class="day-range">' + esc(d.planned.length ? ranges(d.planned) : ranges(d.chapters)) +
+        (d.left.length ? '<span class="muted">Not read that day: ' + esc(ranges(d.left)) + '</span>' : '') + '</span>' +
+        '<span class="day-side">' + badge(d.kind, label) + '<span class="day-count">' + esc(countTxt) + '</span></span></button>';
+      if (isOpen) {
+        html += '<div class="day-body" id="' + bodyId + '">' +
+          (d.left.length ? '<p class="muted small">Chapters not read that day moved forward to the next day, in order. Tick them here when you read them.</p>' : '') +
+          chapterGroups(d.planned, 'plan-' + d.date) +
+          (extra.length ? '<p class="group-name">Read ahead that day</p>' + chapterGroups(extra, 'plan-x-' + d.date) : '') + '</div>';
+      }
+      html += '</div>';
+    }
   }
 
   function bookStats(b) {
